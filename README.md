@@ -24,7 +24,7 @@ Este proyecto usa un entorno de Conda definido en `environment.yml`.
 ### 1. Clonar repositorio
 
 ```bash
-git clone https://github.com/tu_usuario/tu_repo.git
+git clone https://github.com/marcoaranda02/modeloReconocedorVoz
 cd tu_repo
 ```
 
