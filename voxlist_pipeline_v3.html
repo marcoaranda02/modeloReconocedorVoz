@@ -1,0 +1,393 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:transparent}
+  .root{font-family:'DM Sans',sans-serif;color:var(--color-text-primary);padding:24px 16px 32px;max-width:960px;margin:0 auto}
+  .header{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .header-badge{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);padding:4px 10px;border-radius:4px;color:var(--color-text-secondary)}
+  .header h1{font-size:18px;font-weight:600;color:var(--color-text-primary)}
+  .tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;transition:all .2s}
+  .tab:hover{background:var(--color-background-secondary)}
+  .tab.active{background:#1a1a2e;color:#7DF9FF;border-color:#7DF9FF44}
+  .tab.t-red.active{background:#2a0d0d;color:#FF6B6B;border-color:#FF6B6B44}
+  .tab.t-amber.active{background:#2a1a0d;color:#FFB74D;border-color:#FFB74D44}
+  .tab.t-teal.active{background:#0d2a2a;color:#80CBC4;border-color:#80CBC444}
+  .phase{display:none}
+  .phase.active{display:block}
+  .pipeline{display:flex;gap:0;align-items:stretch;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden;margin-bottom:20px}
+  .lane{flex:1;padding:16px 14px;border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;gap:8px}
+  .lane:last-child{border-right:none}
+  .lane-label{font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:4px}
+  .node{border-radius:8px;padding:10px 12px;border:0.5px solid transparent;cursor:pointer;transition:all .18s;position:relative}
+  .node:hover{transform:translateY(-1px)}
+  .node:hover .nd{max-height:100px;opacity:1}
+  .nt{font-size:12px;font-weight:600;margin-bottom:2px}
+  .ns{font-size:11px;opacity:.7}
+  .nd{font-size:11px;line-height:1.5;max-height:0;overflow:hidden;opacity:0;transition:all .25s ease;margin-top:6px;padding-top:6px;border-top:0.5px solid rgba(255,255,255,.12)}
+  .c-in {background:#0d1b2a;border-color:#1e3a5f;color:#90CAF9}
+  .c-in .nd{border-color:#1e3a5f55;color:#64B5F6}
+  .c-pr {background:#1a0d2e;border-color:#4a1a7a;color:#CE93D8}
+  .c-pr .nd{border-color:#4a1a7a55;color:#BA68C8}
+  .c-mo {background:#0d2a1a;border-color:#1a5a30;color:#A5D6A7}
+  .c-mo .nd{border-color:#1a5a3055;color:#81C784}
+  .c-tr {background:#2a1a0d;border-color:#7a4a1a;color:#FFCC80}
+  .c-tr .nd{border-color:#7a4a1a55;color:#FFB74D}
+  .c-ev {background:#1a0d0d;border-color:#7a1a1a;color:#EF9A9A}
+  .c-ev .nd{border-color:#7a1a1a55;color:#E57373}
+  .c-ou {background:#0d1a1a;border-color:#1a6a5a;color:#80CBC4}
+  .c-ou .nd{border-color:#1a6a5a55;color:#4DB6AC}
+  .c-wh {background:#1a1a0d;border-color:#5a5a1a;color:#FFF176}
+  .c-wh .nd{border-color:#5a5a1a55;color:#F9A825}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:10px;margin-bottom:20px}
+  .sc{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+  .sl{font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--color-text-tertiary)}
+  .sv{font-size:20px;font-weight:600;color:var(--color-text-primary)}
+  .su{font-size:12px;color:var(--color-text-secondary)}
+  .arch{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px;margin-bottom:20px}
+  .ab{flex:1;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;text-align:center}
+  .av{text-align:center;color:var(--color-text-tertiary);font-size:18px;margin:-4px 0}
+  .a-fr{background:#1a2a3a;color:#78909C;border:1px dashed #37474F}
+  .a-tr{background:#1a3a1a;color:#A5D6A7;border:1px solid #1a5a30}
+  .ftag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:4px;background:#37474F33;color:#78909C;white-space:nowrap}
+  .ttag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:4px;background:#1a5a3033;color:#81C784;white-space:nowrap}
+  .wtag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:4px;background:#5a5a1a33;color:#FFF176;white-space:nowrap}
+  .triplet-viz{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px;margin-bottom:20px}
+  .tr{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap}
+  .eb{border-radius:8px;padding:10px 18px;text-align:center;font-size:12px;font-weight:600;min-width:100px}
+  .ea{background:#1a3a5a;color:#90CAF9;border:1px solid #1e3a5f}
+  .ep{background:#1a3a1a;color:#A5D6A7;border:1px solid #1a5a30}
+  .en{background:#3a1a1a;color:#EF9A9A;border:1px solid #7a1a1a}
+  .dl{padding:0 12px;font-size:11px;font-family:'Space Mono',monospace;color:var(--color-text-secondary);text-align:center;line-height:1.4}
+  .dg{color:#81C784}
+  .dr{color:#E57373}
+  .gauge-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .gauge{flex:1;min-width:120px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:12px 14px}
+  .gl{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px}
+  .gb{height:6px;border-radius:3px;background:var(--color-border-tertiary);overflow:hidden;margin-bottom:4px}
+  .gf{height:100%;border-radius:3px;transition:width .5s ease}
+  .gg{background:#81C784}
+  .gr{background:#E57373}
+  .gv{font-family:'Space Mono',monospace;font-size:13px;font-weight:700}
+  .hint{font-size:11px;color:var(--color-text-tertiary);font-family:'Space Mono',monospace;text-align:center;padding:8px 0 0;letter-spacing:.5px}
+  .flow-box{border-radius:6px;padding:8px 12px;font-size:11px;text-align:center;min-width:90px}
+  .sep{color:#37474F;padding:0 4px;font-size:14px}
+  .step-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+  .step-num{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+  .cmd{background:#0a0a12;border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:8px 12px;font-family:'Space Mono',monospace;font-size:12px;color:#7DF9FF;margin:6px 0;word-break:break-all}
+  .ok-line{font-family:'Space Mono',monospace;font-size:11px;color:#81C784;padding:2px 0}
+</style>
+
+<div class="root">
+  <div class="header">
+    <span class="header-badge">v3 · Pipeline</span>
+    <h1>VoxList — Sistema biométrico de asistencia por voz</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active"        onclick="showTab('prepro',this)">① Preprocesamiento</button>
+    <button class="tab"               onclick="showTab('arch',this)">② Arquitectura ECAPA</button>
+    <button class="tab"               onclick="showTab('train',this)">③ Entrenamiento</button>
+    <button class="tab"               onclick="showTab('eval',this)">④ Evaluación</button>
+    <button class="tab t-red"         onclick="showTab('liveness',this)">⑤ Liveness Classifier</button>
+    <button class="tab t-amber"       onclick="showTab('whisper',this)">⑥ Whisper · Semántica</button>
+    <button class="tab t-teal"        onclick="showTab('deploy',this)">⑦ Despliegue</button>
+  </div>
+
+  <!-- ① PREPROCESAMIENTO -->
+  <div class="phase active" id="phase-prepro">
+    <div class="stats">
+      <div class="sc"><span class="sl">Participantes</span><div><span class="sv">10</span> <span class="su">hablantes</span></div></div>
+      <div class="sc"><span class="sl">Audios originales</span><div><span class="sv">15</span> <span class="su">× 10 = 150 wavs</span></div></div>
+      <div class="sc"><span class="sl">Duración segmento</span><div><span class="sv">2s</span> <span class="su">+ 0.5s overlap</span></div></div>
+      <div class="sc"><span class="sl">Segmentos estimados</span><div><span class="sv">~600</span> <span class="su">total wavs</span></div></div>
+    </div>
+    <div class="pipeline">
+      <div class="lane">
+        <div class="lane-label">Entrada</div>
+        <div class="node c-in"><div class="nt">150 archivos .wav</div><div class="ns">15 por hablante × 10</div><div class="nd">Audios de ~5s cada uno. Mono o estéreo, cualquier sample rate. Grabados con Yeti Nano a 48 kHz.</div></div>
+        <div class="node c-in"><div class="nt">dataset_limpio/</div><div class="ns">Una subcarpeta por hablante</div><div class="nd">Estructura: dataset_limpio/hablante01/*.wav — los nombres de carpeta corresponden con SPEAKER_TO_STUDENT_ID.</div></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Filtros DSP</div>
+        <div class="node c-pr"><div class="nt">Varianza delta-MFCC</div><div class="ns">Textura vocal</div><div class="nd">Mide variabilidad dinámica de la voz. Umbral PC: &gt;10.0 · Umbral móvil: &gt;3.0 (codecs Opus/AAC comprimen la dinámica).</div></div>
+        <div class="node c-pr"><div class="nt">Spectral Rolloff</div><div class="ns">Frecuencias altas</div><div class="nd">Verifica energía en altas frecuencias. Umbral PC: &gt;5000 Hz · Móvil: &gt;2500 Hz (Opus limita el espectro).</div></div>
+        <div class="node c-pr"><div class="nt">Spectral Flatness</div><div class="ns">Entropía espectral</div><div class="nd">Mide planitud del espectro. Umbral PC: &lt;0.04 · Móvil: &lt;0.15 (compresión AAC eleva la planitud).</div></div>
+        <div class="node c-ev"><div class="nt">Decisión DSP</div><div class="ns">✔ pasa / ✖ bloqueado</div><div class="nd">Si falla cualquier condición → acceso denegado antes del modelo de liveness. Impide ataques evidentes con bajo costo computacional.</div></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Normalización</div>
+        <div class="node c-pr"><div class="nt">Recorte de silencio</div><div class="ns">Umbral 0.005 · margen 10ms</div><div class="nd">Elimina silencio inicial hasta el primer sonido significativo. Añade un margen de 10ms antes del onset para no cortar consonantes.</div></div>
+        <div class="node c-pr"><div class="nt">Mono + Resample</div><div class="ns">→ 16 000 Hz, 1 canal</div><div class="nd">Se promedia canales (stereo→mono) y se remuestrea a 16 kHz para compatibilidad con ECAPA-TDNN y Whisper.</div></div>
+        <div class="node c-pr"><div class="nt">Normalizar volumen</div><div class="ns">pico → 0.95</div><div class="nd">Divide la señal por su valor máximo × 0.95. Evita clipping y normaliza niveles entre grabaciones de distintos dispositivos.</div></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Segmentación</div>
+        <div class="node c-pr"><div class="nt">Ventana deslizante</div><div class="ns">2s · hop 1.5s · min 1.5s</div><div class="nd">Cada audio se parte en clips de 2s con solapamiento de 0.5s. Clips &lt;1.5s se descartan.</div></div>
+        <div class="node c-pr"><div class="nt">Zero-padding ECAPA</div><div class="ns">2s → 4s por repetición</div><div class="nd">En inferencia los clips de 2s se concatenan consigo mismos hasta alcanzar 4s (64 000 samples), tamaño fijo que espera ECAPA.</div></div>
+      </div>
+      <div class="lane">
+        <div class="lane-label">Salida</div>
+        <div class="node c-ou"><div class="nt">dataset_corto/</div><div class="ns">~60 segs por hablante</div><div class="nd">Cada hablante pasa de 15 archivos a ~60 segmentos de 2s. El dataset crece ×4 en número de archivos.</div></div>
+        <div class="node c-ou"><div class="nt">Validación RMS</div><div class="ns">Energía mínima 0.02</div><div class="nd">Tras normalización se verifica RMS &gt; 0.02 para descartar clips que son prácticamente silencio aunque pasen el umbral de amplitud.</div></div>
+      </div>
+    </div>
+    <p class="hint">→ pasa el cursor sobre cada bloque para ver detalles</p>
+  </div>
+
+  <!-- ② ARQUITECTURA ECAPA -->
+  <div class="phase" id="phase-arch">
+    <div class="arch">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="flex:1">
+          <div style="border:1px dashed #37474F;border-radius:10px;padding:12px;background:#0d1820;margin-bottom:8px">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#546E7A;text-transform:uppercase;margin-bottom:10px;text-align:center">ECAPA-TDNN · speechbrain/spkrec-ecapa-voxceleb</div>
+            <div style="background:#0f2030;border:0.5px solid #1e3a5f;border-radius:6px;padding:8px 10px;margin-bottom:6px"><div style="font-size:11px;font-weight:600;color:#78909C;margin-bottom:2px">① Conv1d entrada</div><div style="font-size:10px;color:#546E7A;line-height:1.5">waveform (64 000 samples = 4s @ 16 kHz) → filtros TDNN stride 1 · extrae patrones temporales locales</div></div>
+            <div style="text-align:center;color:#37474F;font-size:13px;margin:3px 0">↓</div>
+            <div style="background:#0f2030;border:0.5px solid #1e3a5f;border-radius:6px;padding:8px 10px;margin-bottom:6px"><div style="font-size:11px;font-weight:600;color:#78909C;margin-bottom:4px">② SE-Res2Block × 3</div><div style="display:flex;gap:6px;flex-wrap:wrap"><div style="flex:1;min-width:80px;background:#0a1825;border-radius:4px;padding:5px 7px;font-size:10px;color:#546E7A;line-height:1.4"><span style="color:#607D8B;font-weight:600">Res2Conv</span><br>multi-escala temporal con dilatación progresiva (scale=8)</div><div style="flex:1;min-width:80px;background:#0a1825;border-radius:4px;padding:5px 7px;font-size:10px;color:#546E7A;line-height:1.4"><span style="color:#607D8B;font-weight:600">SE Gate</span><br>Squeeze-Excitation: recalibra canales por importancia global</div><div style="flex:1;min-width:80px;background:#0a1825;border-radius:4px;padding:5px 7px;font-size:10px;color:#546E7A;line-height:1.4"><span style="color:#607D8B;font-weight:600">Skip +</span><br>residual connection suma entrada al bloque</div></div></div>
+            <div style="text-align:center;color:#37474F;font-size:13px;margin:3px 0">↓ concat</div>
+            <div style="background:#0f2030;border:0.5px solid #1e3a5f;border-radius:6px;padding:8px 10px;margin-bottom:6px"><div style="font-size:11px;font-weight:600;color:#78909C;margin-bottom:2px">③ Conv1d agregación</div><div style="font-size:10px;color:#546E7A;line-height:1.5">concatena salidas de los 3 bloques → Conv1d 1×1 que fusiona todos los mapas de canal</div></div>
+            <div style="text-align:center;color:#37474F;font-size:13px;margin:3px 0">↓</div>
+            <div style="background:#0f2030;border:0.5px solid #1e3a5f;border-radius:6px;padding:8px 10px;margin-bottom:6px"><div style="font-size:11px;font-weight:600;color:#78909C;margin-bottom:4px">④ Attentive Statistics Pooling</div><div style="display:flex;gap:6px"><div style="flex:1;background:#0a1825;border-radius:4px;padding:5px 7px;font-size:10px;color:#546E7A;line-height:1.4"><span style="color:#607D8B;font-weight:600">Atención softmax</span><br>aprende qué frames son más discriminativos</div><div style="flex:1;background:#0a1825;border-radius:4px;padding:5px 7px;font-size:10px;color:#546E7A;line-height:1.4"><span style="color:#607D8B;font-weight:600">μ · σ ponderadas</span><br>media y desviación estándar pesadas → colapsa tiempo en vector fijo</div></div></div>
+            <div style="text-align:center;color:#37474F;font-size:13px;margin:3px 0">↓</div>
+            <div style="background:#0f2030;border:0.5px solid #1e3a5f;border-radius:6px;padding:8px 10px;margin-bottom:6px"><div style="font-size:11px;font-weight:600;color:#78909C;margin-bottom:2px">⑤ Linear 512 → 192 + BN</div><div style="font-size:10px;color:#546E7A;line-height:1.5">proyecta el vector estadístico a 192 dims · BatchNorm estabiliza la distribución del embedding</div></div>
+            <div style="text-align:center;font-family:'Space Mono',monospace;font-size:9px;color:#37474F;letter-spacing:1px;margin-top:4px">SALIDA: embedding 192-d · sin normalizar</div>
+          </div>
+          <div style="text-align:center"><span class="ftag">❄ CONGELADO · grad=False</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding-top:60px;gap:4px;color:var(--color-text-tertiary);font-size:20px">→</div>
+        <div style="flex:0 0 160px;font-size:11px;color:var(--color-text-secondary);padding-top:60px;line-height:1.6">Extrae embedding de <strong style="color:var(--color-text-primary)">192 dims</strong> usando TDNN + atención. Pre-entrenado en VoxCeleb con millones de hablantes.</div>
+      </div>
+      <div class="av">↓ <span style="font-size:12px;color:var(--color-text-secondary)">emb 192-d</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+        <div class="ab a-tr">Linear 192 → 192</div>
+        <div style="text-align:center;font-size:11px;color:var(--color-text-secondary)">BatchNorm1d · ReLU</div>
+        <div class="ab a-tr">Linear 192 → 192</div>
+        <div style="text-align:center"><span class="ttag">✦ ENTRENABLE · projection head</span></div>
+      </div>
+      <div class="av">↓</div>
+      <div style="display:flex;margin-bottom:0">
+        <div class="ab" style="background:#1a1a2e;color:#7DF9FF;border:1px solid #7DF9FF33">L2 Normalize → embedding final · dim 192</div>
+      </div>
+    </div>
+    <div class="triplet-viz">
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase">Triplet Loss · distancia coseno</div>
+      <div class="tr">
+        <div class="eb ea">⚓ Anchor<br><span style="font-size:10px;opacity:.7">hablante A</span></div>
+        <div class="dl">dist<br><span class="dg">↓ small</span></div>
+        <div class="eb ep">+ Positive<br><span style="font-size:10px;opacity:.7">mismo hablante A</span></div>
+        <div class="dl" style="margin:0 8px">|&nbsp;&nbsp;margin<br><span style="color:#FFB74D">0.4</span></div>
+        <div class="eb en">− Negative<br><span style="font-size:10px;opacity:.7">hablante B ≠ A</span></div>
+        <div class="dl">dist<br><span class="dr">↑ big</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--color-text-tertiary);text-align:center;margin-top:12px;font-family:'Space Mono',monospace">Loss = max(0, d(a,p) − d(a,n) + 0.4)</div>
+    </div>
+  </div>
+
+  <!-- ③ ENTRENAMIENTO -->
+  <div class="phase" id="phase-train">
+    <div class="stats">
+      <div class="sc"><span class="sl">Batch size</span><div><span class="sv">16</span> <span class="su">tripletas</span></div></div>
+      <div class="sc"><span class="sl">Epochs</span><div><span class="sv">15</span> <span class="su">pasadas</span></div></div>
+      <div class="sc"><span class="sl">Learning rate</span><div><span class="sv">1e-4</span> <span class="su">Adam</span></div></div>
+      <div class="sc"><span class="sl">Margin</span><div><span class="sv">0.4</span> <span class="su">coseno</span></div></div>
+    </div>
+    <div class="pipeline">
+      <div class="lane"><div class="lane-label">① Muestra</div><div class="node c-in"><div class="nt">TripletSpeakerDataset</div><div class="ns">sampling aleatorio</div><div class="nd">Por cada ítem: elige hablante A al azar, toma 2 audios distintos (anchor+pos), elige hablante B≠A para negative. Random cada epoch.</div></div></div>
+      <div class="lane"><div class="lane-label">② Forward</div><div class="node c-pr"><div class="nt">model(anchor/pos/neg)</div><div class="ns">→ 3 embeddings 192-d</div><div class="nd">ECAPA (frozen, torch.no_grad) + projection trainable. Mixed precision con autocast para ahorrar VRAM en RTX 4050.</div></div></div>
+      <div class="lane"><div class="lane-label">③ Loss</div><div class="node c-tr"><div class="nt">TripletMarginWithDistanceLoss</div><div class="ns">dist coseno · margin=0.4</div><div class="nd">Penaliza cuando d(a,p)+0.4 &gt; d(a,n). Solo actualiza la projection layer, ECAPA no cambia.</div></div></div>
+      <div class="lane"><div class="lane-label">④ Update</div><div class="node c-mo"><div class="nt">GradScaler + step</div><div class="ns">AMP · solo projection</div><div class="nd">scaler.scale(loss).backward() → scaler.step(optimizer) → scaler.update(). Gradients solo en las 2 Linear layers de la projection head.</div></div></div>
+    </div>
+    <p class="hint">→ el loop se repite 15 epochs con nuevas tripletas aleatorias cada vez</p>
+  </div>
+
+  <!-- ④ EVALUACIÓN -->
+  <div class="phase" id="phase-eval">
+    <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;line-height:1.6">Tras el entrenamiento se extraen embeddings de todos los audios y se calculan distancias intra e inter hablante para fijar el umbral de verificación.</div>
+    <div class="gauge-row">
+      <div class="gauge"><div class="gl">Distancia intra-hablante (misma persona)</div><div class="gb"><div class="gf gg" style="width:25%"></div></div><div class="gv" style="color:#81C784">meta &lt; 0.3</div></div>
+      <div class="gauge"><div class="gl">Distancia inter-hablante (personas distintas)</div><div class="gb"><div class="gf gr" style="width:70%"></div></div><div class="gv" style="color:#E57373">meta &gt; 0.5</div></div>
+      <div class="gauge"><div class="gl">Umbral óptimo calculado</div><div class="gb"><div class="gf" style="width:47%;background:#FFB74D"></div></div><div class="gv" style="color:#FFB74D">(max_intra + min_inter) / 2</div></div>
+    </div>
+    <div class="pipeline">
+      <div class="lane"><div class="lane-label">Extracción</div><div class="node c-mo"><div class="nt">embeddings_cache</div><div class="ns">dict hablante→[embs]</div><div class="nd">Cada audio del dataset pasa por el modelo fine-tuned. Se almacena el tensor 192-d resultante por hablante.</div></div></div>
+      <div class="lane"><div class="lane-label">Métricas</div><div class="node c-ev"><div class="nt">Intra vs Inter</div><div class="ns">distancias coseno all-pairs</div><div class="nd">Intra: todos los pares del mismo hablante. Inter: todos los pares entre hablantes distintos. Se reporta mean+max/min.</div></div></div>
+      <div class="lane"><div class="lane-label">Centroides</div><div class="node c-ou"><div class="nt">referencias dict</div><div class="ns">1 centroide por hablante</div><div class="nd">Promedio normalizado de todos los embeddings del hablante. Es el "perfil de voz" usado en inferencia para comparar contra el audio nuevo.</div></div></div>
+      <div class="lane"><div class="lane-label">Guardado</div><div class="node c-ou"><div class="nt">modelo_ecapa_finetuned.pt</div><div class="ns">referencias · umbral · pesos</div><div class="nd">Guarda: referencias (centroides), umbral_rechazo calculado, y projection_state_dict para cargar en inferencia.</div></div></div>
+    </div>
+    <p class="hint">→ en inferencia: comparar embedding nuevo vs centroide · si dist &lt; umbral_rechazo → verificado</p>
+  </div>
+
+  <!-- ⑤ LIVENESS DETECTION -->
+  <div class="phase" id="phase-liveness">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#3a0d0d;border:0.5px solid #FF6B6B44;color:#FF6B6B;padding:4px 10px;border-radius:4px">Capa 2 del pipeline</span>
+      <span style="font-size:13px;color:var(--color-text-secondary)">Clasificador de autenticidad — Transformer propio entrenado desde cero</span>
+    </div>
+    <div class="stats">
+      <div class="sc"><span class="sl">Clases</span><div><span class="sv">3</span> <span class="su">real · WA · YT</span></div></div>
+      <div class="sc"><span class="sl">Dataset real</span><div><span class="sv">150</span> <span class="su">wavs · 10 hab.</span></div></div>
+      <div class="sc"><span class="sl">Dataset ataques</span><div><span class="sv">~900</span> <span class="su">WA + YT</span></div></div>
+      <div class="sc"><span class="sl">Epochs / LR</span><div><span class="sv">20</span> <span class="su">· Adam 1e-4</span></div></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px;background:#0d2a0d;border:0.5px solid #2a6a2a;border-radius:8px;padding:14px 16px"><div style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#81C784;letter-spacing:1px;margin-bottom:6px">CLASE 0 · REAL ✔</div><div style="font-size:12px;color:#A5D6A7;line-height:1.5">Voz captada directamente por el micrófono. Sin compresión ni reproducción intermedia.</div></div>
+      <div style="flex:1;min-width:160px;background:#2a1a0d;border:0.5px solid #7a4a0d;border-radius:8px;padding:14px 16px"><div style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#FFB74D;letter-spacing:1px;margin-bottom:6px">CLASE 1 · WHATSAPP ✖</div><div style="font-size:12px;color:#FFCC80;line-height:1.5">Audio reproducido desde WhatsApp (codec Opus ~8-24 kbps). Capturado con capturarWS.py · 15 muestras/persona.</div></div>
+      <div style="flex:1;min-width:160px;background:#1a0d2a;border:0.5px solid #5a1a7a;border-radius:8px;padding:14px 16px"><div style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#CE93D8;letter-spacing:1px;margin-bottom:6px">CLASE 2 · YOUTUBE ✖</div><div style="font-size:12px;color:#E1BEE7;line-height:1.5">Audio reproducido desde YouTube por bocina. Capturado con capturarYT.py · segmentación automática en clips de 2s.</div></div>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Preprocesamiento del espectrograma</div>
+    <div class="arch" style="margin-bottom:20px">
+      <div style="display:flex;gap:8px;flex-direction:column">
+        <div class="ab" style="background:#1a0d2e;color:#CE93D8;border:1px solid #4a1a7a">WAV 16 kHz mono · 2s (32 000 samples)</div>
+        <div class="av">↓</div>
+        <div class="ab" style="background:#1a0d2e;color:#CE93D8;border:1px solid #4a1a7a">MelSpectrogram &nbsp;·&nbsp; n_mels=64 &nbsp;·&nbsp; n_fft=1024 &nbsp;·&nbsp; hop_length=512 &nbsp;→&nbsp; [1, 64, T]</div>
+        <div class="av">↓</div>
+        <div class="ab" style="background:#1a0d2e;color:#CE93D8;border:1px solid #4a1a7a">AmplitudeToDB &nbsp;→&nbsp; escala logarítmica &nbsp;·&nbsp; transponer &nbsp;→&nbsp; [T, 64]</div>
+        <div class="av">↓</div>
+        <div class="ab" style="background:#1a0d2e;color:#CE93D8;border:1px solid #4a1a7a">Padding / crop a longitud fija &nbsp;→&nbsp; <strong>[63, 64]</strong></div>
+        <div class="av">↓</div>
+        <div style="text-align:center"><span style="font-size:11px;color:var(--color-text-secondary)">Input al modelo: [batch, 63, 64]</span></div>
+      </div>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Arquitectura del clasificador (LivenessClassifier)</div>
+    <div class="arch" style="margin-bottom:20px">
+      <div style="border:1px dashed #4a1a7a;border-radius:10px;padding:14px;background:#12091e;margin-bottom:10px">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#7B1FA2;text-transform:uppercase;margin-bottom:10px;text-align:center">Transformer Encoder (implementación propia · train_liveness.py)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="flex:1;min-width:100px;background:#1a0d2e;border-radius:6px;padding:8px 10px;font-size:11px;color:#CE93D8;border:0.5px solid #4a1a7a44"><strong>input_proj</strong><br><span style="font-size:10px;opacity:.7">Linear(64 → 128) · proyecta los 64 bins de Mel al espacio del Transformer</span></div>
+          <div style="flex:1;min-width:100px;background:#1a0d2e;border-radius:6px;padding:8px 10px;font-size:11px;color:#CE93D8;border:0.5px solid #4a1a7a44"><strong>TransformerEncoder ×3</strong><br><span style="font-size:10px;opacity:.7">d_model=128 · nhead=8 · dim_feedforward=256 · batch_first=True</span></div>
+          <div style="flex:1;min-width:100px;background:#1a0d2e;border-radius:6px;padding:8px 10px;font-size:11px;color:#CE93D8;border:0.5px solid #4a1a7a44"><strong>Global Avg Pooling</strong><br><span style="font-size:10px;opacity:.7">x.mean(dim=1) · colapsa la dimensión temporal → vector resumen</span></div>
+        </div>
+        <div style="text-align:center"><span class="ttag" style="background:#4a1a7a33;color:#CE93D8">✦ ENTRENABLE COMPLETO · train_liveness.py</span></div>
+      </div>
+      <div class="av">↓ vector 128-d</div>
+      <div style="border:1px solid #1a5a30;border-radius:10px;padding:14px;background:#0d1f10;margin-bottom:10px">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#81C784;text-transform:uppercase;margin-bottom:8px;text-align:center">MLP Clasificador</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="flex:1;background:#0d2a15;border-radius:6px;padding:8px 10px;font-size:11px;color:#A5D6A7;border:0.5px solid #1a5a3044;text-align:center">Linear → 64<br><span style="font-size:10px;opacity:.7">ReLU + Dropout 0.3</span></div>
+          <div style="flex:0 0 20px;display:flex;align-items:center;color:#37474F">→</div>
+          <div style="flex:1;background:#0d2a15;border-radius:6px;padding:8px 10px;font-size:11px;color:#A5D6A7;border:0.5px solid #1a5a3044;text-align:center">Linear → <strong>3</strong><br><span style="font-size:10px;opacity:.7">Softmax · 3 clases</span></div>
+        </div>
+      </div>
+      <div class="av">↓</div>
+      <div class="ab" style="background:#1a1a2e;color:#7DF9FF;border:1px solid #7DF9FF33;font-family:'Space Mono',monospace;font-size:11px">argmax → 0: REAL · 1: WhatsApp · 2: YouTube &nbsp;+&nbsp; % confianza softmax</div>
+    </div>
+    <p class="hint">→ modelo guardado como modelo_liveness_transformer.pt · probado en tiempo real con prubaCLA.py</p>
+  </div>
+
+  <!-- ⑥ WHISPER -->
+  <div class="phase" id="phase-whisper">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#2a2a0d;border:0.5px solid #FFF17644;color:#FFF176;padding:4px 10px;border-radius:4px">Capa 3 del pipeline</span>
+      <span style="font-size:13px;color:var(--color-text-secondary)">Verificación semántica — openai/whisper-small via HuggingFace</span>
+    </div>
+    <div class="stats">
+      <div class="sc"><span class="sl">Modelo</span><div><span class="sv" style="font-size:14px">whisper</span> <span class="su">-small ~500 MB</span></div></div>
+      <div class="sc"><span class="sl">Idioma forzado</span><div><span class="sv" style="font-size:14px">ES</span> <span class="su">forced_decoder_ids</span></div></div>
+      <div class="sc"><span class="sl">Palabra clave</span><div><span class="sv" style="font-size:14px">"presente"</span> <span class="su">+ variantes</span></div></div>
+      <div class="sc"><span class="sl">Posición en pipeline</span><div><span class="sv" style="font-size:14px">3</span> <span class="su">antes de ECAPA</span></div></div>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Flujo de verificación semántica</div>
+    <div class="pipeline" style="margin-bottom:20px">
+      <div class="lane"><div class="lane-label">Preparación</div><div class="node c-wh"><div class="nt">Resample → 16 kHz</div><div class="ns">Normalización pico 0.95</div><div class="nd">Whisper siempre espera audio a 16 kHz. Se convierte desde los 48 kHz del micrófono antes de pasar al processor.</div></div></div>
+      <div class="lane"><div class="lane-label">Transcripción</div><div class="node c-wh"><div class="nt">WhisperProcessor + generate</div><div class="ns">forced_decoder_ids español</div><div class="nd">Se fuerza el idioma a español para evitar que Whisper transcriba "presente" como "present" u otras variantes en inglés.</div></div></div>
+      <div class="lane"><div class="lane-label">Limpieza</div><div class="node c-wh"><div class="nt">Normalizar texto</div><div class="ns">minúsculas · sin puntuación</div><div class="nd">Se eliminan puntos, comas, signos de exclamación y espacios extra para que la comparación sea robusta a variaciones de formato.</div></div></div>
+      <div class="lane"><div class="lane-label">Verificación</div><div class="node c-wh"><div class="nt">set(palabras) ∩ PALABRAS_CLAVE</div><div class="ns">{"presente","presento","present"}</div><div class="nd">Intersección de conjuntos. Si alguna palabra del texto transcrito está en el set de palabras clave → pasa a ECAPA.</div></div></div>
+      <div class="lane"><div class="lane-label">Decisión</div><div class="node c-ev"><div class="nt">✔ pasa / ✖ bloqueado</div><div class="ns">con texto transcrito</div><div class="nd">Si no detecta "presente": status=retry con mensaje "Escuchamos: [texto]". El alumno ve exactamente qué dijo el sistema.</div></div></div>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Variantes aceptadas de "presente"</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="background:#2a2a0d;border:0.5px solid #FFF17644;border-radius:6px;padding:8px 14px;font-family:'Space Mono',monospace;font-size:12px;color:#FFF176">presente</div>
+      <div style="background:#2a2a0d;border:0.5px solid #FFF17644;border-radius:6px;padding:8px 14px;font-family:'Space Mono',monospace;font-size:12px;color:#FFF176">présente</div>
+      <div style="background:#2a2a0d;border:0.5px solid #FFF17644;border-radius:6px;padding:8px 14px;font-family:'Space Mono',monospace;font-size:12px;color:#FFF176">presento</div>
+      <div style="background:#2a2a0d;border:0.5px solid #FFF17644;border-radius:6px;padding:8px 14px;font-family:'Space Mono',monospace;font-size:12px;color:#FFF176">present</div>
+      <div style="background:#1a1a1a;border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:8px 14px;font-size:11px;color:var(--color-text-tertiary)">fallback: cualquier token del set</div>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Por qué va entre Liveness y ECAPA</div>
+    <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:16px;font-size:12px;color:var(--color-text-secondary);line-height:1.7">
+      Si el audio pasó liveness (es voz humana en vivo) pero el alumno no dijo "presente", el sistema devuelve un <em>retry</em> sin consumir el costo computacional de ECAPA-TDNN.
+      Esto impide que un atacante use su propia voz real para intentar ser identificado como otro hablante diciendo palabras arbitrarias.
+      Además refuerza el protocolo de la sesión: el alumno debe explícitamente afirmar su presencia.
+    </div>
+    <p class="hint">→ warning "attention mask is not set" es inofensivo · no afecta el resultado de la transcripción</p>
+  </div>
+
+  <!-- ⑦ DESPLIEGUE -->
+  <div class="phase" id="phase-deploy">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:#0d2a2a;border:0.5px solid #80CBC444;color:#80CBC4;padding:4px 10px;border-radius:4px">Sistema completo</span>
+      <span style="font-size:13px;color:var(--color-text-secondary)">FastAPI + Cola FIFO + ngrok · corre en la PC del profesor</span>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Flujo de una sesión completa</div>
+    <div style="display:flex;align-items:center;gap:4px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden;padding:14px 10px;flex-wrap:wrap;margin-bottom:20px">
+      <div class="flow-box" style="background:#0d2a0d;border:1px solid #2a6a2a;color:#81C784">Profesor<br><span style="font-size:10px;opacity:.7">crea sesión</span></div>
+      <span class="sep">→</span>
+      <div class="flow-box" style="background:#0d2a0d;border:1px solid #2a6a2a;color:#81C784">QR generado<br><span style="font-size:10px;opacity:.7">ngrok URL</span></div>
+      <span class="sep">→</span>
+      <div class="flow-box" style="background:#1a0d2e;border:1px solid #4a1a7a;color:#CE93D8">Alumno escanea<br><span style="font-size:10px;opacity:.7">?role=student</span></div>
+      <span class="sep">→</span>
+      <div class="flow-box" style="background:#1a0d2e;border:1px solid #4a1a7a;color:#CE93D8">Graba 2s<br><span style="font-size:10px;opacity:.7">POST /identificar-audio</span></div>
+      <span class="sep">→</span>
+      <div class="flow-box" style="background:#2a1a0d;border:1px solid #7a4a0d;color:#FFCC80">Cola FIFO<br><span style="font-size:10px;opacity:.7">espera turno</span></div>
+      <span class="sep">→</span>
+      <div class="flow-box" style="background:#1a1a0d;border:1px solid #5a5a0d;color:#FFF176">Pipeline<br><span style="font-size:10px;opacity:.7">DSP→Live→Whisper→ECAPA</span></div>
+      <span class="sep">→</span>
+      <div class="flow-box" style="background:#0d2a0d;border:1px solid #2a6a2a;color:#81C784">Supabase<br><span style="font-size:10px;opacity:.7">attendance INSERT</span></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px">Terminal 1 — servidor</div>
+        <div class="step-card">
+          <div class="cmd">conda activate speaker_env</div>
+          <div class="cmd">uvicorn server:app --host 0.0.0.0 --port 8000</div>
+          <div style="margin-top:8px">
+            <div class="ok-line">✅ Liveness cargado.</div>
+            <div class="ok-line">✅ ECAPA cargado.</div>
+            <div class="ok-line">✅ Whisper cargado.</div>
+            <div class="ok-line">✅ Cola de audio iniciada.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px">Terminal 2 — túnel ngrok</div>
+        <div class="step-card">
+          <div class="cmd">ngrok http 8000</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--color-text-secondary);line-height:1.6">Copiar la URL:<br><span style="font-family:'Space Mono',monospace;color:#80CBC4;font-size:11px">https://abc123.ngrok-free.app</span><br>→ Config → URL del servidor FastAPI → Guardar</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Cola FIFO asíncrona</div>
+    <div class="pipeline" style="margin-bottom:20px">
+      <div class="lane"><div class="lane-label">Entrada HTTP</div><div class="node c-ou"><div class="nt">POST /identificar-audio</div><div class="ns">audio + session_id</div><div class="nd">El endpoint recibe el WebM del celular, lo decodifica y lo encola. Acepta conexiones simultáneas sin bloquear.</div></div></div>
+      <div class="lane"><div class="lane-label">Cola deque</div><div class="node c-ou"><div class="nt">AudioQueue</div><div class="ns">asyncio.Event por job</div><div class="nd">Cada audio recibe un job_id y un Event. El cliente hace await event.wait() — se libera cuando llega su turno.</div></div></div>
+      <div class="lane"><div class="lane-label">Worker</div><div class="node c-ou"><div class="nt">run_in_executor</div><div class="ns">ThreadPoolExecutor</div><div class="nd">Corre correr_pipeline() en un thread separado para no bloquear el event loop de asyncio durante la inferencia con PyTorch.</div></div></div>
+      <div class="lane"><div class="lane-label">Respuesta</div><div class="node c-ou"><div class="nt">JSON al alumno</div><div class="ns">ok · retry · blocked · already</div><div class="nd">El alumno ve el resultado en pantalla: nombre + confianza si fue reconocido, o el motivo del bloqueo con el texto transcrito por Whisper.</div></div></div>
+    </div>
+
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:10px">Roles — misma URL, parámetro ?role</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="flex:1;min-width:200px;background:#0d2a0d;border:0.5px solid #2a6a2a;border-radius:8px;padding:14px 16px"><div style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#81C784;margin-bottom:6px">PROFESOR · /</div><div style="font-size:12px;color:#A5D6A7;line-height:1.5">Panel completo: tabla de asistencia, stats, modo voz, QR, exportar CSV, gestión de alumnos y sesiones.</div></div>
+      <div style="flex:1;min-width:200px;background:#1a0d2e;border:0.5px solid #4a1a7a;border-radius:8px;padding:14px 16px"><div style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#CE93D8;margin-bottom:6px">ALUMNO · /?role=student&session_id=XXX</div><div style="font-size:12px;color:#E1BEE7;line-height:1.5">Solo botón de micrófono. Graba 2s, ve el resultado, puede reintentar hasta 5 veces. Sin instalar nada.</div></div>
+    </div>
+    <p class="hint">→ la URL de ngrok cambia cada vez que se reinicia · actualizar Config al inicio de cada clase</p>
+  </div>
+
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('phase-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
